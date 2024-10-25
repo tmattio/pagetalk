@@ -1,0 +1,146 @@
+let render ~comments ~pending_count ~approved_count ~rejected_count ~spam_count ~csrf_token =
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PageTalk Admin</title>
+    <style>
+      body { font-family: sans-serif; margin: 2rem; }
+      .stats { display: flex; gap: 2rem; margin-bottom: 2rem; }
+      .stat-box { padding: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+      th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid #ddd; }
+      .status-pending { background-color: #fff3cd; }
+      .status-approved { background-color: #d4edda; }
+      .status-rejected { background-color: #f8d7da; }
+      .status-spam { background-color: #e2e3e5; }
+      .bulk-actions { margin: 1rem 0; padding: 1rem; background: #f8f9fa; }
+      .status-buttons { display: flex; gap: 0.25rem; }
+      .status-button {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #ccc;
+        background: #fff;
+        cursor: pointer;
+        font-size: 0.9em;
+      }
+      .status-button.active {
+        background: #e9ecef;
+        font-weight: bold;
+      }
+      .logout { float: right; }
+    </style>
+  </head>
+  <body>
+    <h1>PageTalk Admin Dashboard</h1>
+    <form method="POST" action="/admin/logout" class="logout">
+      <input name="dream.csrf" type="hidden" value="<%s csrf_token %>">
+      <button type="submit">Logout</button>
+    </form>
+
+    <div class="stats">
+      <div class="stat-box">
+        <h3>Pending</h3>
+        <div><%i pending_count %></div>
+      </div>
+      <div class="stat-box">
+        <h3>Approved</h3>
+        <div><%i approved_count %></div>
+      </div>
+      <div class="stat-box">
+        <h3>Rejected</h3>
+        <div><%i rejected_count %></div>
+      </div>
+      <div class="stat-box">
+        <h3>Spam</h3>
+        <div><%i spam_count %></div>
+      </div>
+    </div>
+
+    <form method="POST" action="/admin/bulk-moderate" id="main-form">
+      <input name="dream.csrf" type="hidden" value="<%s csrf_token %>">
+      <div class="bulk-actions">
+        <select name="bulk_action">
+          <option value="approve">Approve Selected</option>
+          <option value="reject">Reject Selected</option>
+          <option value="mark_spam">Mark as Spam</option>
+        </select>
+        <button type="submit">Apply to Selected</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox" onclick="toggleAll(this)"></th>
+            <th>Page</th>
+            <th>Author</th>
+            <th>Email</th>
+            <th>Content</th>
+            <th>Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% comments |> List.iter (fun (comment : Comment.t) -> %>
+            <tr class="status-<%s Comment.string_of_status comment.status %>">
+              <td><input type="checkbox" name="comment_ids[]" value="<%s comment.id %>"></td>
+              <td><%s comment.page_url %></td>
+              <td><%s comment.author %></td>
+              <td><%s Option.value ~default:"-" comment.email %></td>
+              <td><%s comment.content %></td>
+              <td><% let date = Unix.localtime comment.timestamp in %>
+                <%i date.tm_year + 1900 %>-<%i date.tm_mon + 1 %>-<%i date.tm_mday %>
+                <%i date.tm_hour %>:<%i date.tm_min %>
+              </td>
+              <td>
+                <div class="status-buttons">
+                  <button type="button" 
+                          onclick="updateStatus('<%s comment.id %>', 'pending')"
+                          class="status-button <%s! if comment.status = Pending then "active" else "" %>">
+                    Pending
+                  </button>
+                  <button type="button"
+                          onclick="updateStatus('<%s comment.id %>', 'approved')"
+                          class="status-button <%s! if comment.status = Approved then "active" else "" %>">
+                    Approved
+                  </button>
+                  <button type="button"
+                          onclick="updateStatus('<%s comment.id %>', 'rejected')"
+                          class="status-button <%s! if comment.status = Rejected then "active" else "" %>">
+                    Rejected
+                  </button>
+                  <button type="button"
+                          onclick="updateStatus('<%s comment.id %>', 'spam')"
+                          class="status-button <%s! if comment.status = Spam then "active" else "" %>">
+                    Spam
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <% ); %>
+        </tbody>
+      </table>
+    </form>
+
+    <!-- Hidden form for individual status updates -->
+    <form id="status-update-form" method="POST" action="/admin/moderate" style="display: none;">
+      <input name="dream.csrf" type="hidden" value="<%s csrf_token %>">
+      <input type="hidden" name="comment_id" id="status-comment-id">
+      <input type="hidden" name="status" id="status-value">
+    </form>
+
+    <script>
+      function toggleAll(source) {
+        const checkboxes = document.querySelectorAll('input[name="comment_ids[]"]');
+        for (let checkbox of checkboxes) {
+          checkbox.checked = source.checked;
+        }
+      }
+
+      function updateStatus(commentId, status) {
+        const form = document.getElementById('status-update-form');
+        document.getElementById('status-comment-id').value = commentId;
+        document.getElementById('status-value').value = status;
+        form.submit();
+      }
+    </script>
+  </body>
+</html>

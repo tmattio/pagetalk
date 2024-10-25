@@ -1,0 +1,21 @@
+(include_subdirs qualified)
+
+(executable
+ (public_name pagetalk)
+ (name main)
+ (libraries dream)
+ (preprocess
+  (pps lwt_ppx)))
+
+; embed the pagetalk.js file
+
+(rule
+ (with-stdout-to
+  asset.ml
+  (progn
+   (echo "let pagetalk_js = {|")
+   (cat %{dep:pagetalk.js})
+   (echo "|}\n")
+   (echo "let pagetalk_css = {|")
+   (cat %{dep:pagetalk.css})
+   (echo "|}\n"))))

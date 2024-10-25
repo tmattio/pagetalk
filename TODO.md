@@ -1,0 +1,4 @@
+- Adding a database (e.g., PostgreSQL)
+- Adding authentication/moderation
+- Implementing rate limiting
+- Use a configuration file

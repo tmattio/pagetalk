@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PageTalk Demo</title>
+  <script src="http://localhost:3000/pagetalk.js"></script>
+  <link rel="stylesheet" href="http://localhost:3000/pagetalk.css">
+</head>
+
+<body>
+  <div class="demo-article">
+    <h1>Welcome to PageTalk Demo</h1>
+    <p>This is a demonstration page for PageTalk, a lightweight and easy-to-integrate commenting system. The article
+      content below is just placeholder text to show how comments would appear on a real webpage.</p>
+
+    <h2>Sample Article Content</h2>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore
+      magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+      consequat.</p>
+
+    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
+      sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  </div>
+
+  <div id="pagetalk-comments"></div>
+
+  <script>
+    const pageTalk = new PageTalk({
+      serverUrl: 'http://localhost:3000',
+      containerId: 'pagetalk-comments'
+    });
+    pageTalk.init();
+  </script>
+
+</body>
+
+</html>
